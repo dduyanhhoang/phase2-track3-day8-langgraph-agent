@@ -35,6 +35,8 @@ def classify_node(state: AgentState) -> dict:
     if any(k in query for k in ("refund", "delete", "send", "cancel", "remove", "revoke")):
         route = Route.RISKY
         risk_level = "high"
+    elif any(k in query for k in ("bulk",)):
+        route = Route.MULTI_TOOL
     elif any(k in query for k in ("status", "order", "lookup", "check", "track", "find", "search")):
         route = Route.TOOL
     elif len(clean_words) < 5 and "it" in clean_words:
@@ -180,3 +182,35 @@ def dead_letter_node(state: AgentState) -> dict:
 def finalize_node(state: AgentState) -> dict:
     """Finalize the run and emit a final audit event."""
     return {"events": [make_event("finalize", "completed", "workflow finished")]}
+
+
+def fan_out_node(state: AgentState) -> dict:
+    """Passthrough node before parallel fan-out — routing happens in route_fan_out."""
+    return {
+        "events": [make_event("fan_out", "dispatching", "dispatching parallel tools")],
+    }
+
+
+def tool_a_node(state: AgentState) -> dict:
+    """Mock tool A — first parallel branch."""
+    result = f"tool-a-result for scenario={state.get('scenario_id', 'unknown')}"
+    return {
+        "tool_results": [result],
+        "events": [make_event("tool_a", "completed", "tool A executed")],
+    }
+
+
+def tool_b_node(state: AgentState) -> dict:
+    """Mock tool B — second parallel branch."""
+    result = f"tool-b-result for scenario={state.get('scenario_id', 'unknown')}"
+    return {
+        "tool_results": [result],
+        "events": [make_event("tool_b", "completed", "tool B executed")],
+    }
+
+
+def merge_node(state: AgentState) -> dict:
+    """Junction node after parallel fan-out — tool_results already merged via add reducer."""
+    return {
+        "events": [make_event("merge", "completed", f"parallel tools merged, results={len(state.get('tool_results', []))}")],
+    }

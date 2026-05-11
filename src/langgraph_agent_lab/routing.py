@@ -49,3 +49,17 @@ def route_after_approval(state: AgentState) -> str:
     """
     approval = state.get("approval") or {}
     return "tool" if approval.get("approved") else "clarify"
+
+
+def route_fan_out(state: AgentState) -> list:
+    """Fan out to parallel tool branches for multi_tool route.
+
+    Returns a list of Send objects directing tool_a and tool_b to run in parallel.
+    TODO(student): wire fan_out → [tool_a, tool_b] → merge in graph.py.
+    """
+    from langgraph.types import Send
+
+    return [
+        Send("tool_a", state),
+        Send("tool_b", state),
+    ]

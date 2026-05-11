@@ -18,6 +18,7 @@ class Route(StrEnum):
     MISSING_INFO = "missing_info"
     RISKY = "risky"
     ERROR = "error"
+    MULTI_TOOL = "multi_tool"
     DEAD_LETTER = "dead_letter"
     DONE = "done"
 
