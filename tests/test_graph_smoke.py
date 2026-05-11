@@ -24,3 +24,58 @@ def test_graph_runs_basic_routes(query, expected_route):
     result = graph.invoke(state, config={"configurable": {"thread_id": state["thread_id"]}})
     assert result["route"] == expected_route
     assert result.get("final_answer") or result.get("pending_question")
+
+
+def test_missing_info_path():
+    graph = build_graph(checkpointer=build_checkpointer("memory"))
+    scenario = Scenario(id="smoke-missing", query="Can you fix it?", expected_route=Route.MISSING_INFO)
+    state = initial_state(scenario)
+    result = graph.invoke(state, config={"configurable": {"thread_id": state["thread_id"]}})
+    assert result["route"] == Route.MISSING_INFO.value
+    assert result.get("pending_question")
+
+
+def test_error_retry_path():
+    graph = build_graph(checkpointer=build_checkpointer("memory"))
+    scenario = Scenario(
+        id="smoke-error",
+        query="Timeout failure while processing request",
+        expected_route=Route.ERROR,
+        should_retry=True,
+        max_attempts=3,
+    )
+    state = initial_state(scenario)
+    result = graph.invoke(state, config={"configurable": {"thread_id": state["thread_id"]}})
+    assert result["route"] == Route.ERROR.value
+    assert result.get("final_answer")
+    retry_count = sum(1 for e in result.get("events", []) if e.get("node") == "retry")
+    assert retry_count >= 1
+
+
+def test_dead_letter_path():
+    graph = build_graph(checkpointer=build_checkpointer("memory"))
+    scenario = Scenario(
+        id="smoke-dead",
+        query="Timeout failure while processing request",
+        expected_route=Route.ERROR,
+        should_retry=True,
+        max_attempts=1,
+    )
+    state = initial_state(scenario)
+    result = graph.invoke(state, config={"configurable": {"thread_id": state["thread_id"]}})
+    assert "manual review" in (result.get("final_answer") or "").lower()
+
+
+def test_risky_approval_path():
+    graph = build_graph(checkpointer=build_checkpointer("memory"))
+    scenario = Scenario(
+        id="smoke-risky",
+        query="Refund this customer and send confirmation",
+        expected_route=Route.RISKY,
+        requires_approval=True,
+    )
+    state = initial_state(scenario)
+    result = graph.invoke(state, config={"configurable": {"thread_id": state["thread_id"]}})
+    assert result["route"] == Route.RISKY.value
+    assert result.get("approval") is not None
+    assert result.get("final_answer")
