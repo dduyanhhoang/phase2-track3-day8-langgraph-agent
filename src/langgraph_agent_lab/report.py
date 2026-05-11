@@ -83,7 +83,18 @@ mock approval (`ApprovalDecision(approved=True)`). `route_after_approval` routes
    `approval_node` is already gated behind the env var.
 5. **Exponential backoff:** Add `latency_ms` metadata to retry events so operators can
    tune backoff intervals per error type.
+
+## Graph Diagram
+
+{_load_diagram()}
 """
+
+
+def _load_diagram() -> str:
+    diagram_path = Path(__file__).parent.parent.parent / "docs" / "graph.md"
+    if diagram_path.exists():
+        return diagram_path.read_text(encoding="utf-8")
+    return "_Graph diagram not generated. Run `python scripts/generate_diagram.py`._\n"
 
 
 def write_report(metrics: MetricsReport, output_path: str | Path) -> None:
