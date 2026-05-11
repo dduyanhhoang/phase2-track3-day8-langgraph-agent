@@ -15,13 +15,17 @@ from .nodes import (
     classify_node,
     dead_letter_node,
     evaluate_node,
+    fan_out_node,
     finalize_node,
     intake_node,
+    merge_node,
     retry_or_fallback_node,
     risky_action_node,
+    tool_a_node,
+    tool_b_node,
     tool_node,
 )
-from .routing import route_after_approval, route_after_classify, route_after_evaluate, route_after_retry
+from .routing import route_after_approval, route_after_classify, route_after_evaluate, route_after_retry, route_fan_out
 from .state import AgentState
 
 
@@ -54,6 +58,10 @@ def build_graph(checkpointer: Any | None = None):
     graph.add_node("retry", retry_or_fallback_node)
     graph.add_node("dead_letter", dead_letter_node)
     graph.add_node("finalize", finalize_node)
+    graph.add_node("fan_out", fan_out_node)
+    graph.add_node("tool_a", tool_a_node)
+    graph.add_node("tool_b", tool_b_node)
+    graph.add_node("merge", merge_node)
 
     graph.add_edge(START, "intake")
     graph.add_edge("intake", "classify")
@@ -64,6 +72,10 @@ def build_graph(checkpointer: Any | None = None):
     graph.add_edge("risky_action", "approval")
     graph.add_conditional_edges("approval", route_after_approval)
     graph.add_conditional_edges("retry", route_after_retry)
+    graph.add_conditional_edges("fan_out", route_fan_out, ["tool_a", "tool_b"])
+    graph.add_edge("tool_a", "merge")
+    graph.add_edge("tool_b", "merge")
+    graph.add_edge("merge", "evaluate")
     graph.add_edge("answer", "finalize")
     graph.add_edge("dead_letter", "finalize")
     graph.add_edge("finalize", END)

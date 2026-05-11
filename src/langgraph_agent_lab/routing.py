@@ -17,6 +17,7 @@ def route_after_classify(state: AgentState) -> str:
         Route.MISSING_INFO.value: "clarify",
         Route.RISKY.value: "risky_action",
         Route.ERROR.value: "retry",
+        Route.MULTI_TOOL.value: "fan_out",
     }
     return mapping.get(route, "answer")
 
