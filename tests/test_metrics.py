@@ -21,3 +21,15 @@ def test_summarize_metrics():
     report = summarize_metrics([m1, m2])
     assert report.total_scenarios == 2
     assert 0 <= report.success_rate <= 1
+
+
+def test_latency_ms_recorded():
+    state = {
+        "scenario_id": "L",
+        "route": "simple",
+        "final_answer": "ok",
+        "events": [],
+        "errors": [],
+    }
+    metric = metric_from_state(state, expected_route="simple", approval_required=False, latency_ms=500)
+    assert metric.latency_ms == 500

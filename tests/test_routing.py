@@ -21,3 +21,15 @@ def test_route_after_retry_bound():
 def test_route_after_evaluate():
     assert route_after_evaluate({"evaluation_result": "success"}) == "answer"
     assert route_after_evaluate({"evaluation_result": "needs_retry"}) == "retry"
+
+
+def test_route_after_classify_missing_info():
+    assert route_after_classify({"route": "missing_info"}) == "clarify"
+
+
+def test_route_after_classify_error():
+    assert route_after_classify({"route": "error"}) == "retry"
+
+
+def test_route_after_classify_unknown():
+    assert route_after_classify({"route": "garbage_route"}) == "answer"
