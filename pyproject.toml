@@ -17,6 +17,7 @@ dependencies = [
   "pytest>=9.0.3",
   "langgraph-checkpoint-sqlite>=3.0.3",
   "langsmith>=0.8.3",
+  "streamlit>=1.35",
 ]
 
 [project.optional-dependencies]
